@@ -75,16 +75,13 @@ public sealed class OllamaInstance : IOllamaInstance {
         return false;
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken = default) {
+    public Task StopAsync(CancellationToken cancellationToken = default) {
         if (_options.Mode == OllamaInstanceMode.External)
-            return;
+            return Task.CompletedTask;
 
-        // For managed processes, ensure we stop the process and clean up resources.
-        // This code is repeated in StopManagedProcessAsync
-        // TODO: Refactor duplication and add call to StopManagedProcessAsync. 
-        // Replace remainder of function with
-        // return StopManagedProcessAsync(cancellationToken);
-
+        return StopManagedProcessAsync(cancellationToken);
+    }
+    private async Task StopManagedProcessAsync(CancellationToken cancellationToken) {
         if (_process is null)
             return;
 
@@ -97,28 +94,6 @@ public sealed class OllamaInstance : IOllamaInstance {
         _logger.LogInformation("Stopping Ollama instance {InstanceName}", Name);
 
         try {
-            _process.Kill(entireProcessTree: true);
-
-            await _process.WaitForExitAsync(cancellationToken);
-        }
-        finally {
-            _process.Dispose();
-            _process = null;
-        }
-    }
-    private async Task StopManagedProcessAsync(CancellationToken cancellationToken) {
-        if (_process is null)
-            return;
-
-        if (_process.HasExited) {
-            _process.Dispose();
-            _process = null;
-            return;
-        }
-
-        try {
-            _logger.LogInformation("Stopping Ollama instance {InstanceName}", Name);
-
             _process.Kill(entireProcessTree: true);
 
             await _process.WaitForExitAsync(cancellationToken);

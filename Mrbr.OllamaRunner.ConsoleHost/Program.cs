@@ -6,6 +6,13 @@ using Mrbr.OllamaRunner.Client;
 using Mrbr.OllamaRunner.DependencyInjection;
 using Mrbr.OllamaRunner.Hosting;
 
+using var cancellationTokenSource = new CancellationTokenSource();
+
+Console.CancelKeyPress += (_, args) => {
+    args.Cancel = true;
+    cancellationTokenSource.Cancel();
+};
+
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Configuration
@@ -21,29 +28,41 @@ using var host = builder.Build();
 var manager = host.Services.GetRequiredService<IOllamaInstanceManager>();
 var clientFactory = host.Services.GetRequiredService<IOllamaClientFactory>();
 
-await manager.StartAsync("default");
+try {
+    var instance = manager.GetInstance("default");
 
-Console.WriteLine("Ollama instance is ready.");
+    await instance.StartAsync(cancellationTokenSource.Token);
 
-var instance = manager.GetInstance("default");
+    var model = instance.DefaultModel
+        ?? throw new InvalidOperationException(
+            $"No default model configured for Ollama instance '{instance.Name}'.");
 
-await instance.StartAsync();
+    var client = clientFactory.CreateClient(instance.Name);
 
-var model = instance.DefaultModel
-    ?? throw new InvalidOperationException(
-        $"No default model configured for Ollama instance '{instance.Name}'.");
+    var reply = await client.ChatAsync(
+        model,
+        "Say hello in one short sentence.",
+        cancellationTokenSource.Token);
 
-var client = clientFactory.CreateClient(instance.Name);
+    Console.WriteLine();
+    Console.WriteLine("Model response:");
+    Console.WriteLine(reply);
 
-var reply = await client.ChatAsync(
-    model,
-    "Say hello in one short sentence.");
+    Console.WriteLine();
+    Console.WriteLine("Press Enter or Ctrl+C to stop.");
 
-Console.WriteLine(reply);
+    while (!cancellationTokenSource.IsCancellationRequested) {
+        if (Console.KeyAvailable && Console.ReadKey(intercept: true).Key == ConsoleKey.Enter)
+            break;
 
-
-Console.WriteLine();
-Console.WriteLine("Press Enter to stop.");
-Console.ReadLine();
-
-await manager.StopAllAsync();
+        await Task.Delay(100, cancellationTokenSource.Token)
+            .WaitAsync(TimeSpan.FromMilliseconds(150));
+    }
+}
+catch (OperationCanceledException) {
+    Console.WriteLine();
+    Console.WriteLine("Shutdown requested.");
+}
+finally {
+    await manager.StopAllAsync();
+}
