@@ -1,0 +1,33 @@
+﻿using Mrbr.OllamaRunner.Models.Chat;
+
+namespace Mrbr.OllamaRunner.Client;
+
+/// <summary>
+/// Default Ollama HTTP API client.
+/// </summary>
+public sealed class OllamaClient : IOllamaClient {
+    private readonly HttpClient _httpClient;
+
+    public OllamaClient(HttpClient httpClient) {
+        _httpClient = httpClient;
+    }
+
+    public async Task<OllamaChatResponse> ChatAsync(
+        OllamaChatRequest request,
+        CancellationToken cancellationToken = default) {
+        ArgumentNullException.ThrowIfNull(request);
+
+        request.Stream = false;
+
+        using var response = await _httpClient.PostAsJsonAsync(
+            "chat",
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<OllamaChatResponse>(
+            cancellationToken)
+            ?? throw new InvalidOperationException("Ollama returned an empty chat response.");
+    }
+}

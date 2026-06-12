@@ -1,0 +1,24 @@
+﻿<Project>
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="11.0.0-preview.5.*" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0-preview.5.*" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="11.0.0-preview.5.*" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="11.0.0-preview.5.*" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="11.0.0-preview.5.*" />
+
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="11.0.0-preview.5.*" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="11.0.0-preview.5.*" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="11.0.0-preview.5.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="Microsoft.Extensions.Logging.Abstractions" Version="11.0.0-preview.5.26302.115" />
+    <PackageReference Update="Microsoft.Extensions.Http" Version="11.0.0-preview.5.26302.115" />
+    <PackageReference Update="Microsoft.Extensions.Options.ConfigurationExtensions" Version="11.0.0-preview.5.26302.115" />
+  </ItemGroup>
+</Project>
