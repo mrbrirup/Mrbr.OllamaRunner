@@ -30,4 +30,30 @@ public sealed class OllamaClient : IOllamaClient {
             cancellationToken)
             ?? throw new InvalidOperationException("Ollama returned an empty chat response.");
     }
+
+    public async Task<string> ChatAsync(
+        string model,
+        string prompt,
+        CancellationToken cancellationToken = default) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(prompt);
+
+        var response = await ChatAsync(
+            new OllamaChatRequest {
+                Model = model,
+                Messages =
+                [
+                    new OllamaChatMessage
+                    {
+                        Role = "user",
+                        Content = prompt
+                    }
+                ],
+                Stream = false
+            },
+            cancellationToken);
+
+        return response.Message?.Content
+            ?? throw new InvalidOperationException("Ollama returned no message content.");
+    }
 }

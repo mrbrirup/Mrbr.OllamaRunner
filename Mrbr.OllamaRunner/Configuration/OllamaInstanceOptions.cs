@@ -44,4 +44,9 @@ public sealed class OllamaInstanceOptions {
     /// Ollama API base address for this instance.
     /// </summary>
     public Uri ApiBaseUri => new($"http://{BindHost}:{Port}/api/");
+
+    /// <summary>
+    /// Default chat model used by this instance when no model is supplied explicitly.
+    /// </summary>
+    public string? DefaultModel { get; set; }
 }

@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Mrbr.OllamaRunner.Client;
 using Mrbr.OllamaRunner.DependencyInjection;
 using Mrbr.OllamaRunner.Hosting;
-using Mrbr.OllamaRunner.Models.Chat;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -27,23 +26,20 @@ await manager.StartAsync("default");
 Console.WriteLine("Ollama instance is ready.");
 
 var client = clientFactory.CreateClient("default");
+var model = builder.Configuration[
+    "OllamaRunner:Instances:default:DefaultModel"];
 
-var chatResponse = await client.ChatAsync(new OllamaChatRequest {
-    Model = "llama3.2:1b",
-    Messages =
-    [
-        new OllamaChatMessage
-        {
-            Role = "user",
-            Content = "Say hello in one short sentence."
-        }
-    ],
-    Stream = false
-});
+if (string.IsNullOrWhiteSpace(model))
+    throw new InvalidOperationException("No default model configured.");
+
+var reply = await client.ChatAsync(
+    model,
+    "Say hello in one short sentence.");
 
 Console.WriteLine();
 Console.WriteLine("Model response:");
-Console.WriteLine(chatResponse.Message?.Content ?? "[No response content]");
+Console.WriteLine(reply);
+
 
 Console.WriteLine();
 Console.WriteLine("Press Enter to stop.");
