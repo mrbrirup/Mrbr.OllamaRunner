@@ -79,6 +79,12 @@ public sealed class OllamaInstance : IOllamaInstance {
         if (_options.Mode == OllamaInstanceMode.External)
             return;
 
+        // For managed processes, ensure we stop the process and clean up resources.
+        // This code is repeated in StopManagedProcessAsync
+        // TODO: Refactor duplication and add call to StopManagedProcessAsync. 
+        // Replace remainder of function with
+        // return StopManagedProcessAsync(cancellationToken);
+
         if (_process is null)
             return;
 
@@ -100,7 +106,28 @@ public sealed class OllamaInstance : IOllamaInstance {
             _process = null;
         }
     }
+    private async Task StopManagedProcessAsync(CancellationToken cancellationToken) {
+        if (_process is null)
+            return;
 
+        if (_process.HasExited) {
+            _process.Dispose();
+            _process = null;
+            return;
+        }
+
+        try {
+            _logger.LogInformation("Stopping Ollama instance {InstanceName}", Name);
+
+            _process.Kill(entireProcessTree: true);
+
+            await _process.WaitForExitAsync(cancellationToken);
+        }
+        finally {
+            _process.Dispose();
+            _process = null;
+        }
+    }
     public async ValueTask DisposeAsync() {
         await StopAsync();
         _httpClient.Dispose();
