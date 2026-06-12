@@ -34,4 +34,8 @@ public interface IOllamaInstance : IAsyncDisposable {
     /// Waits until the Ollama API responds.
     /// </summary>
     Task<bool> WaitUntilReadyAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Default chat model configured for this instance.
+    /// </summary>
+    string? DefaultModel { get; }
 }

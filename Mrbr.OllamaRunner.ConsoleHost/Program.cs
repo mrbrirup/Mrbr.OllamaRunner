@@ -25,19 +25,20 @@ await manager.StartAsync("default");
 
 Console.WriteLine("Ollama instance is ready.");
 
-var client = clientFactory.CreateClient("default");
-var model = builder.Configuration[
-    "OllamaRunner:Instances:default:DefaultModel"];
+var instance = manager.GetInstance("default");
 
-if (string.IsNullOrWhiteSpace(model))
-    throw new InvalidOperationException("No default model configured.");
+await instance.StartAsync();
+
+var model = instance.DefaultModel
+    ?? throw new InvalidOperationException(
+        $"No default model configured for Ollama instance '{instance.Name}'.");
+
+var client = clientFactory.CreateClient(instance.Name);
 
 var reply = await client.ChatAsync(
     model,
     "Say hello in one short sentence.");
 
-Console.WriteLine();
-Console.WriteLine("Model response:");
 Console.WriteLine(reply);
 
 

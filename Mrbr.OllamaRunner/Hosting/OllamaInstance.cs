@@ -35,6 +35,8 @@ public sealed class OllamaInstance : IOllamaInstance {
 
     public bool IsRunning => _process is { HasExited: false };
 
+    public string? DefaultModel => _options.DefaultModel;
+
     public async Task StartAsync(CancellationToken cancellationToken = default) {
         if (_options.Mode == OllamaInstanceMode.ManagedProcess && !IsRunning)
             _process = _processRunner.Start(_options);
