@@ -1,4 +1,6 @@
-﻿namespace Mrbr.OllamaRunner.Tests;
+﻿using Xunit;
+
+namespace Mrbr.OllamaRunner.Tests;
 
 public class UnitTest1 {
     [Fact]
