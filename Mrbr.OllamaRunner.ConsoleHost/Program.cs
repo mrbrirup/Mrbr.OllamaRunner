@@ -102,6 +102,45 @@ installedModel => string.Equals(
 
     Console.WriteLine($"Project count: {projects.Count}");
 
+    Console.WriteLine();
+    Console.WriteLine("Research document storage test:");
+    var documentStore = host.Services.GetRequiredService<IResearchDocumentStore>();
+    var document = await documentStore.ImportTextAsync(
+        project.Id,
+        "Local AI Notes",
+        """
+    Local AI allows models to run on your own machine.
+
+    This can improve privacy, reduce network dependency, and allow applications
+    to use different local models for different tasks.
+    """,
+        cancellationToken: cancellationTokenSource.Token);
+
+    Console.WriteLine($"Imported document: {document.Name}");
+    Console.WriteLine($"Document id: {document.Id}");
+    Console.WriteLine($"Content hash: {document.ContentHash}");
+
+    var loadedDocument = await documentStore.GetAsync(
+        project.Id,
+        document.Id,
+        cancellationTokenSource.Token);
+
+    Console.WriteLine($"Loaded document: {loadedDocument?.Name}");
+
+    var extractedText = await documentStore.GetExtractedTextAsync(
+        project.Id,
+        document.Id,
+        cancellationTokenSource.Token);
+
+    Console.WriteLine($"Extracted text length: {extractedText?.Length ?? 0}");
+
+    var documents = await documentStore.ListAsync(
+        project.Id,
+        cancellationTokenSource.Token);
+
+    Console.WriteLine($"Document count for project: {documents.Count}");
+
+
 
 
     var reply = await client.ChatAsync(

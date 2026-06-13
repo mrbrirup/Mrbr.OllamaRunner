@@ -40,4 +40,42 @@ internal sealed class ResearchStoragePathProvider {
 
         Directory.CreateDirectory(GetProjectPath(projectId));
     }
+    public string GetDocumentsPath(string projectId) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        return Path.Combine(GetProjectPath(projectId), "Documents");
+    }
+
+    public string GetDocumentPath(string projectId, string documentId) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(documentId);
+
+        return Path.Combine(GetDocumentsPath(projectId), documentId);
+    }
+
+    public string GetDocumentJsonPath(string projectId, string documentId) {
+        return Path.Combine(GetDocumentPath(projectId, documentId), "document.json");
+    }
+
+    public string GetOriginalTextPath(string projectId, string documentId) {
+        return Path.Combine(GetDocumentPath(projectId, documentId), "original.txt");
+    }
+
+    public string GetExtractedTextPath(string projectId, string documentId) {
+        return Path.Combine(GetDocumentPath(projectId, documentId), "extracted.txt");
+    }
+
+    public void EnsureDocumentsCreated(string projectId) {
+        if (!_options.CreateDirectories)
+            return;
+
+        Directory.CreateDirectory(GetDocumentsPath(projectId));
+    }
+
+    public void EnsureDocumentCreated(string projectId, string documentId) {
+        if (!_options.CreateDirectories)
+            return;
+
+        Directory.CreateDirectory(GetDocumentPath(projectId, documentId));
+    }
 }

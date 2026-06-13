@@ -36,6 +36,14 @@ public static class FileSystemResearchStorageServiceCollectionExtensions {
                 pathProvider,
                 logger);
         });
+        services.AddSingleton<IResearchDocumentStore>(provider => {
+            var pathProvider = provider.GetRequiredService<ResearchStoragePathProvider>();
+            var logger = provider.GetRequiredService<ILogger<FileSystemResearchDocumentStore>>();
+
+            return new FileSystemResearchDocumentStore(
+                pathProvider,
+                logger);
+        });
 
         return services;
     }
