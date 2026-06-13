@@ -1,4 +1,6 @@
-﻿namespace Mrbr.OllamaRunner.Hosting;
+﻿using Mrbr.OllamaRunner.Models.Common;
+
+namespace Mrbr.OllamaRunner.Hosting;
 
 /// <summary>
 /// Represents one configured Ollama server instance.
@@ -38,4 +40,9 @@ public interface IOllamaInstance : IAsyncDisposable {
     /// Default chat model configured for this instance.
     /// </summary>
     string? DefaultModel { get; }
+
+    string? DefaultKeepAlive { get; }
+
+    OllamaRuntimeOptions? DefaultRuntimeOptions { get; }
+
 }

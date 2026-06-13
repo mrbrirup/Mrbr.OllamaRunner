@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Mrbr.OllamaRunner.Models.Common;
+using System.Text.Json.Serialization;
 
 namespace Mrbr.OllamaRunner.Models.Chat;
 
@@ -14,4 +15,10 @@ public sealed class OllamaChatRequest {
 
     [JsonPropertyName("stream")]
     public bool Stream { get; set; } = false;
+
+    [JsonPropertyName("keep_alive")]
+    public string? KeepAlive { get; set; }
+
+    [JsonPropertyName("options")]
+    public OllamaRuntimeOptions? Options { get; set; }
 }

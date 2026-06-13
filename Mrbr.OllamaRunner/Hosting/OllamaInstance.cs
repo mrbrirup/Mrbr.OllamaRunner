@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Mrbr.OllamaRunner.Configuration;
+using Mrbr.OllamaRunner.Models.Common;
 using System.Diagnostics;
 
 namespace Mrbr.OllamaRunner.Hosting;
@@ -36,6 +37,11 @@ public sealed class OllamaInstance : IOllamaInstance {
     public bool IsRunning => _process is { HasExited: false };
 
     public string? DefaultModel => _options.DefaultModel;
+
+
+    public string? DefaultKeepAlive => _options.DefaultKeepAlive;
+
+    public OllamaRuntimeOptions? DefaultRuntimeOptions => _options.DefaultRuntimeOptions;
 
     public async Task StartAsync(CancellationToken cancellationToken = default) {
         if (_options.Mode == OllamaInstanceMode.ManagedProcess && !IsRunning)

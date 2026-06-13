@@ -1,4 +1,6 @@
-﻿namespace Mrbr.OllamaRunner.Configuration;
+﻿using Mrbr.OllamaRunner.Models.Common;
+
+namespace Mrbr.OllamaRunner.Configuration;
 
 /// <summary>
 /// Configuration for a single Ollama server instance.
@@ -49,4 +51,15 @@ public sealed class OllamaInstanceOptions {
     /// Default chat model used by this instance when no model is supplied explicitly.
     /// </summary>
     public string? DefaultModel { get; set; }
+
+    /// <summary>
+    /// Optional default keep-alive value used by higher-level request helpers.
+    /// Examples: "5m", "30m", "1h", "0".
+    /// </summary>
+    public string? DefaultKeepAlive { get; set; }
+
+    /// <summary>
+    /// Optional default runtime options used by higher-level request helpers.
+    /// </summary>
+    public OllamaRuntimeOptions? DefaultRuntimeOptions { get; set; }
 }

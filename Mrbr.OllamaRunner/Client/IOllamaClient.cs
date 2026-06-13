@@ -1,4 +1,5 @@
 ﻿using Mrbr.OllamaRunner.Models.Chat;
+using Mrbr.OllamaRunner.Models.Common;
 
 namespace Mrbr.OllamaRunner.Client;
 
@@ -13,5 +14,12 @@ public interface IOllamaClient {
     Task<string> ChatAsync(
         string model,
         string prompt,
+        CancellationToken cancellationToken = default);
+
+    Task<string> ChatAsync(
+        string model,
+        string prompt,
+        OllamaRuntimeOptions? options,
+        string? keepAlive = null,
         CancellationToken cancellationToken = default);
 }

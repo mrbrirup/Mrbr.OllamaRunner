@@ -1,4 +1,5 @@
 ﻿using Mrbr.OllamaRunner.Hosting;
+using Mrbr.OllamaRunner.Models.Common;
 using Xunit;
 
 namespace Mrbr.OllamaRunner.Tests;
@@ -70,6 +71,13 @@ public sealed class OllamaInstanceManagerTests {
         public Uri ApiBaseUri { get; } = new("http://127.0.0.1:11434/api/");
 
         public string? DefaultModel { get; set; } = "llama3.2:1b";
+
+        public string? DefaultKeepAlive { get; set; } = "5m";
+
+        public OllamaRuntimeOptions? DefaultRuntimeOptions { get; set; } = new() {
+            Temperature = 0.2,
+            NumCtx = 2048
+        };
 
         public bool IsRunning { get; private set; }
 

@@ -40,9 +40,11 @@ try {
     var client = clientFactory.CreateClient(instance.Name);
 
     var reply = await client.ChatAsync(
-        model,
-        "Say hello in one short sentence.",
-        cancellationTokenSource.Token);
+    model,
+    "Say hello in one short sentence.",
+    instance.DefaultRuntimeOptions,
+    instance.DefaultKeepAlive,
+    cancellationTokenSource.Token);
 
     Console.WriteLine();
     Console.WriteLine("Model response:");
