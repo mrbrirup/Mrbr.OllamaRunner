@@ -94,10 +94,13 @@ public sealed class OllamaClient : IOllamaClient {
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var reader = new StreamReader(stream);
 
-        while (!reader.EndOfStream) {
+        while (true) {
             cancellationToken.ThrowIfCancellationRequested();
 
             var line = await reader.ReadLineAsync(cancellationToken);
+
+            if (line is null)
+                break;
 
             if (string.IsNullOrWhiteSpace(line))
                 continue;
@@ -175,5 +178,59 @@ public sealed class OllamaClient : IOllamaClient {
 
         return response.Response
             ?? throw new InvalidOperationException("Ollama returned no generated response content.");
+    }
+    public async IAsyncEnumerable<OllamaGenerateResponse> GenerateStreamAsync(
+        OllamaGenerateRequest request,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default) {
+        ArgumentNullException.ThrowIfNull(request);
+
+        request.Stream = true;
+
+        using var response = await _httpClient.PostAsJsonAsync(
+            "generate",
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var reader = new StreamReader(stream);
+
+        while (true) {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var line = await reader.ReadLineAsync(cancellationToken);
+
+            if (line is null)
+                break;
+
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            var chunk = JsonSerializer.Deserialize<OllamaGenerateResponse>(line);
+
+            if (chunk is not null)
+                yield return chunk;
+        }
+    }
+
+    public IAsyncEnumerable<OllamaGenerateResponse> GenerateStreamAsync(
+        string model,
+        string prompt,
+        OllamaRuntimeOptions? options = null,
+        string? keepAlive = null,
+        CancellationToken cancellationToken = default) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(prompt);
+
+        return GenerateStreamAsync(
+            new OllamaGenerateRequest {
+                Model = model,
+                Prompt = prompt,
+                Stream = true,
+                KeepAlive = keepAlive,
+                Options = options
+            },
+            cancellationToken);
     }
 }

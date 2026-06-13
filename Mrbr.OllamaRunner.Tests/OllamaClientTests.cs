@@ -363,4 +363,104 @@ public sealed class OllamaClientTests {
                 Prompt = "Hello"
             }));
     }
+    [Fact]
+    public async Task GenerateStreamAsync_ReadsNewlineDelimitedChunks() {
+        var handler = new FakeHttpMessageHandler((_, _) =>
+            new HttpResponseMessage(HttpStatusCode.OK) {
+                Content = new StringContent(
+                    """
+                {"model":"llama3.2:1b","response":"Hel","done":false}
+                {"model":"llama3.2:1b","response":"lo","done":false}
+                {"model":"llama3.2:1b","response":"","done":true}
+                """,
+                    Encoding.UTF8,
+                    "application/x-ndjson")
+            });
+
+        var httpClient = new HttpClient(handler) {
+            BaseAddress = new Uri("http://127.0.0.1:11434/api/")
+        };
+
+        var client = new OllamaClient(httpClient);
+
+        var chunks = new List<OllamaGenerateResponse>();
+
+        await foreach (var chunk in client.GenerateStreamAsync(new OllamaGenerateRequest {
+            Model = "llama3.2:1b",
+            Prompt = "Say hello."
+        })) {
+            chunks.Add(chunk);
+        }
+
+        Assert.Equal(3, chunks.Count);
+        Assert.Equal("Hel", chunks[0].Response);
+        Assert.Equal("lo", chunks[1].Response);
+        Assert.True(chunks[2].Done);
+    }
+    [Fact]
+    public async Task GenerateStreamAsync_WithOptions_SendsOptionsAndKeepAlive() {
+        string? requestJson = null;
+
+        var handler = new FakeHttpMessageHandler((request, _) => {
+            requestJson = request.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
+
+            return new HttpResponseMessage(HttpStatusCode.OK) {
+                Content = new StringContent(
+                    """
+                {"model":"llama3.2:1b","response":"Hello","done":false}
+                {"model":"llama3.2:1b","response":"","done":true}
+                """,
+                    Encoding.UTF8,
+                    "application/x-ndjson")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) {
+            BaseAddress = new Uri("http://127.0.0.1:11434/api/")
+        };
+
+        var client = new OllamaClient(httpClient);
+
+        var chunks = new List<OllamaGenerateResponse>();
+
+        await foreach (var chunk in client.GenerateStreamAsync(
+            "llama3.2:1b",
+            "Say hello.",
+            new OllamaRuntimeOptions {
+                Temperature = 0.2,
+                NumCtx = 2048
+            },
+            keepAlive: "5m")) {
+            chunks.Add(chunk);
+        }
+
+        Assert.NotNull(requestJson);
+        Assert.Contains("\"stream\":true", requestJson);
+        Assert.Contains("\"keep_alive\":\"5m\"", requestJson);
+        Assert.Contains("\"temperature\":0.2", requestJson);
+        Assert.Contains("\"num_ctx\":2048", requestJson);
+
+        Assert.Equal(2, chunks.Count);
+        Assert.Equal("Hello", chunks[0].Response);
+        Assert.True(chunks[^1].Done);
+    }
+    [Fact]
+    public async Task GenerateStreamAsync_WhenHttpFails_ThrowsHttpRequestException() {
+        var handler = new FakeHttpMessageHandler((_, _) =>
+            new HttpResponseMessage(HttpStatusCode.InternalServerError));
+
+        var httpClient = new HttpClient(handler) {
+            BaseAddress = new Uri("http://127.0.0.1:11434/api/")
+        };
+
+        var client = new OllamaClient(httpClient);
+
+        await Assert.ThrowsAsync<HttpRequestException>(async () => {
+            await foreach (var _ in client.GenerateStreamAsync(new OllamaGenerateRequest {
+                Model = "llama3.2:1b",
+                Prompt = "Hello"
+            })) {
+            }
+        });
+    }
 }

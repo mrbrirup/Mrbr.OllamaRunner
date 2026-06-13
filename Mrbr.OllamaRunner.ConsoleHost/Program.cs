@@ -76,6 +76,20 @@ try {
 
     Console.WriteLine(generated);
 
+    Console.WriteLine();
+    Console.WriteLine("Generate streaming response:");
+
+    await foreach (var chunk in client.GenerateStreamAsync(
+        model,
+        "Write one short paragraph describing why local AI is useful.",
+        instance.DefaultRuntimeOptions,
+        instance.DefaultKeepAlive,
+        cancellationTokenSource.Token)) {
+        Console.Write(chunk.Response);
+    }
+
+    Console.WriteLine();
+
 
     Console.WriteLine("Press Enter or Ctrl+C to stop.");
 

@@ -45,4 +45,14 @@ public interface IOllamaClient {
         OllamaRuntimeOptions? options = null,
         string? keepAlive = null,
         CancellationToken cancellationToken = default);
+    IAsyncEnumerable<OllamaGenerateResponse> GenerateStreamAsync(
+    OllamaGenerateRequest request,
+    CancellationToken cancellationToken = default);
+
+    IAsyncEnumerable<OllamaGenerateResponse> GenerateStreamAsync(
+        string model,
+        string prompt,
+        OllamaRuntimeOptions? options = null,
+        string? keepAlive = null,
+        CancellationToken cancellationToken = default);
 }
