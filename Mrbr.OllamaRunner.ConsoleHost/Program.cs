@@ -51,6 +51,20 @@ try {
     Console.WriteLine(reply);
 
     Console.WriteLine();
+    Console.WriteLine("Streaming response:");
+
+    await foreach (var chunk in client.ChatStreamAsync(
+        model,
+        "Write one short paragraph about local AI.",
+        instance.DefaultRuntimeOptions,
+        instance.DefaultKeepAlive,
+        cancellationTokenSource.Token)) {
+        Console.Write(chunk.Message?.Content);
+    }
+
+    Console.WriteLine();
+
+
     Console.WriteLine("Press Enter or Ctrl+C to stop.");
 
     while (!cancellationTokenSource.IsCancellationRequested) {

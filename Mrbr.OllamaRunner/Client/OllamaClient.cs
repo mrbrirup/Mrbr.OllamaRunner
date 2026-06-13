@@ -1,5 +1,7 @@
 ﻿using Mrbr.OllamaRunner.Models.Chat;
 using Mrbr.OllamaRunner.Models.Common;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace Mrbr.OllamaRunner.Client;
 
@@ -32,7 +34,10 @@ public sealed class OllamaClient : IOllamaClient {
             ?? throw new InvalidOperationException("Ollama returned an empty chat response.");
     }
 
-    public Task<string> ChatAsync(string model, string prompt, CancellationToken cancellationToken = default) {
+    public Task<string> ChatAsync(
+        string model,
+        string prompt,
+        CancellationToken cancellationToken = default) {
         return ChatAsync(
             model,
             prompt,
@@ -40,31 +45,6 @@ public sealed class OllamaClient : IOllamaClient {
             keepAlive: null,
             cancellationToken);
     }
-
-    // TODO: Consider removing the commented-out method below if it's no longer needed, as it duplicates functionality with the new method that includes options and keepAlive parameters.
-    //public async Task<string> ChatAsync(string model, string prompt, CancellationToken cancellationToken = default) {
-    //    ArgumentException.ThrowIfNullOrWhiteSpace(model);
-    //    ArgumentException.ThrowIfNullOrWhiteSpace(prompt);
-
-    //    var response = await ChatAsync(
-    //        new OllamaChatRequest {
-    //            Model = model,
-    //            Messages =
-    //            [
-    //                new OllamaChatMessage
-    //                {
-    //                    Role = "user",
-    //                    Content = prompt
-    //                }
-    //            ],
-    //            Stream = false
-    //        },
-    //        cancellationToken);
-
-    //    return response.Message?.Content
-    //        ?? throw new InvalidOperationException("Ollama returned no message content.");
-    //}
-
 
     public async Task<string> ChatAsync(
         string model,
@@ -81,10 +61,10 @@ public sealed class OllamaClient : IOllamaClient {
                 Messages =
                 [
                     new OllamaChatMessage
-                {
-                    Role = "user",
-                    Content = prompt
-                }
+                    {
+                        Role = "user",
+                        Content = prompt
+                    }
                 ],
                 Stream = false,
                 KeepAlive = keepAlive,
@@ -94,5 +74,64 @@ public sealed class OllamaClient : IOllamaClient {
 
         return response.Message?.Content
             ?? throw new InvalidOperationException("Ollama returned no message content.");
+    }
+
+    public async IAsyncEnumerable<OllamaChatResponse> ChatStreamAsync(
+        OllamaChatRequest request,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default) {
+        ArgumentNullException.ThrowIfNull(request);
+
+        request.Stream = true;
+
+        using var response = await _httpClient.PostAsJsonAsync(
+            "chat",
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var reader = new StreamReader(stream);
+
+        while (!reader.EndOfStream) {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var line = await reader.ReadLineAsync(cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            var chunk = JsonSerializer.Deserialize<OllamaChatResponse>(line);
+
+            if (chunk is not null)
+                yield return chunk;
+        }
+    }
+
+    public IAsyncEnumerable<OllamaChatResponse> ChatStreamAsync(
+        string model,
+        string prompt,
+        OllamaRuntimeOptions? options = null,
+        string? keepAlive = null,
+        CancellationToken cancellationToken = default) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(prompt);
+
+        return ChatStreamAsync(
+            new OllamaChatRequest {
+                Model = model,
+                Messages =
+                [
+                    new OllamaChatMessage
+                    {
+                        Role = "user",
+                        Content = prompt
+                    }
+                ],
+                Stream = true,
+                KeepAlive = keepAlive,
+                Options = options
+            },
+            cancellationToken);
     }
 }

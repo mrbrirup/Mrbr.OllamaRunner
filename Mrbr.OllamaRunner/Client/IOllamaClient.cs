@@ -22,4 +22,15 @@ public interface IOllamaClient {
         OllamaRuntimeOptions? options,
         string? keepAlive = null,
         CancellationToken cancellationToken = default);
+
+    IAsyncEnumerable<OllamaChatResponse> ChatStreamAsync(
+        OllamaChatRequest request,
+        CancellationToken cancellationToken = default);
+
+    IAsyncEnumerable<OllamaChatResponse> ChatStreamAsync(
+        string model,
+        string prompt,
+        OllamaRuntimeOptions? options = null,
+        string? keepAlive = null,
+        CancellationToken cancellationToken = default);
 }
