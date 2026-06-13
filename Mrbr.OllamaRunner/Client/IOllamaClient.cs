@@ -1,5 +1,6 @@
 ﻿using Mrbr.OllamaRunner.Models.Chat;
 using Mrbr.OllamaRunner.Models.Common;
+using Mrbr.OllamaRunner.Models.Generate;
 
 namespace Mrbr.OllamaRunner.Client;
 
@@ -28,6 +29,17 @@ public interface IOllamaClient {
         CancellationToken cancellationToken = default);
 
     IAsyncEnumerable<OllamaChatResponse> ChatStreamAsync(
+        string model,
+        string prompt,
+        OllamaRuntimeOptions? options = null,
+        string? keepAlive = null,
+        CancellationToken cancellationToken = default);
+
+    Task<OllamaGenerateResponse> GenerateAsync(
+        OllamaGenerateRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<string> GenerateAsync(
         string model,
         string prompt,
         OllamaRuntimeOptions? options = null,

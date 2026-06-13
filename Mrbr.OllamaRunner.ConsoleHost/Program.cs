@@ -64,6 +64,18 @@ try {
 
     Console.WriteLine();
 
+    Console.WriteLine();
+    Console.WriteLine("Generate response:");
+
+    var generated = await client.GenerateAsync(
+        model,
+        "Write one short sentence describing a local Ollama runner.",
+        instance.DefaultRuntimeOptions,
+        instance.DefaultKeepAlive,
+        cancellationTokenSource.Token);
+
+    Console.WriteLine(generated);
+
 
     Console.WriteLine("Press Enter or Ctrl+C to stop.");
 

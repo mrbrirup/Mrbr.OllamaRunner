@@ -1,5 +1,6 @@
 ﻿using Mrbr.OllamaRunner.Models.Chat;
 using Mrbr.OllamaRunner.Models.Common;
+using Mrbr.OllamaRunner.Models.Generate;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
@@ -133,5 +134,46 @@ public sealed class OllamaClient : IOllamaClient {
                 Options = options
             },
             cancellationToken);
+    }
+    public async Task<OllamaGenerateResponse> GenerateAsync(
+    OllamaGenerateRequest request,
+    CancellationToken cancellationToken = default) {
+        ArgumentNullException.ThrowIfNull(request);
+
+        request.Stream = false;
+
+        using var response = await _httpClient.PostAsJsonAsync(
+            "generate",
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<OllamaGenerateResponse>(
+            cancellationToken)
+            ?? throw new InvalidOperationException("Ollama returned an empty generate response.");
+    }
+
+    public async Task<string> GenerateAsync(
+        string model,
+        string prompt,
+        OllamaRuntimeOptions? options = null,
+        string? keepAlive = null,
+        CancellationToken cancellationToken = default) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(prompt);
+
+        var response = await GenerateAsync(
+            new OllamaGenerateRequest {
+                Model = model,
+                Prompt = prompt,
+                Stream = false,
+                KeepAlive = keepAlive,
+                Options = options
+            },
+            cancellationToken);
+
+        return response.Response
+            ?? throw new InvalidOperationException("Ollama returned no generated response content.");
     }
 }
