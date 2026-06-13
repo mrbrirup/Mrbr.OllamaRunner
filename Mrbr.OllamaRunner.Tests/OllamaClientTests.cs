@@ -463,4 +463,91 @@ public sealed class OllamaClientTests {
             }
         });
     }
+    [Fact]
+    public async Task ListModelsAsync_SendsRequestToTagsEndpoint() {
+        HttpRequestMessage? capturedRequest = null;
+
+        var handler = new FakeHttpMessageHandler((request, _) => {
+            capturedRequest = request;
+
+            return new HttpResponseMessage(HttpStatusCode.OK) {
+                Content = new StringContent(
+                    """
+                {
+                  "models": [
+                    {
+                      "name": "llama3.2:1b",
+                      "model": "llama3.2:1b",
+                      "modified_at": "2026-06-13T12:00:00Z",
+                      "size": 123456789,
+                      "digest": "abc123",
+                      "details": {
+                        "parent_model": "",
+                        "format": "gguf",
+                        "family": "llama",
+                        "families": ["llama"],
+                        "parameter_size": "1B",
+                        "quantization_level": "Q4_K_M"
+                      }
+                    }
+                  ]
+                }
+                """,
+                    Encoding.UTF8,
+                    "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) {
+            BaseAddress = new Uri("http://127.0.0.1:11434/api/")
+        };
+
+        var client = new OllamaClient(httpClient);
+
+        var result = await client.ListModelsAsync();
+
+        Assert.NotNull(capturedRequest);
+        Assert.Equal(HttpMethod.Get, capturedRequest.Method);
+        Assert.Equal(
+            new Uri("http://127.0.0.1:11434/api/tags"),
+            capturedRequest.RequestUri);
+
+        Assert.Single(result.Models);
+
+        var model = result.Models[0];
+
+        Assert.Equal("llama3.2:1b", model.Name);
+        Assert.Equal("llama3.2:1b", model.Model);
+        Assert.Equal(123456789, model.Size);
+        Assert.Equal("abc123", model.Digest);
+        Assert.Equal("gguf", model.Details?.Format);
+        Assert.Equal("llama", model.Details?.Family);
+        Assert.Equal("1B", model.Details?.ParameterSize);
+        Assert.Equal("Q4_K_M", model.Details?.QuantizationLevel);
+    }
+    [Fact]
+    public async Task ListModelsAsync_WhenNoModels_ReturnsEmptyList() {
+        var handler = new FakeHttpMessageHandler((_, _) =>
+            new HttpResponseMessage(HttpStatusCode.OK) {
+                Content = new StringContent(
+                    """
+                {
+                  "models": []
+                }
+                """,
+                    Encoding.UTF8,
+                    "application/json")
+            });
+
+        var httpClient = new HttpClient(handler) {
+            BaseAddress = new Uri("http://127.0.0.1:11434/api/")
+        };
+
+        var client = new OllamaClient(httpClient);
+
+        var result = await client.ListModelsAsync();
+
+        Assert.NotNull(result.Models);
+        Assert.Empty(result.Models);
+    }
 }

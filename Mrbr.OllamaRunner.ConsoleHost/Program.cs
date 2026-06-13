@@ -38,7 +38,25 @@ try {
             $"No default model configured for Ollama instance '{instance.Name}'.");
 
     var client = clientFactory.CreateClient(instance.Name);
+    var models = await client.ListModelsAsync(cancellationTokenSource.Token);
+    var hasDefaultModel = models.Models.Any(
+installedModel => string.Equals(
+    installedModel.Name,
+    model,
+    StringComparison.OrdinalIgnoreCase)
+|| string.Equals(
+    installedModel.Model,
+    model,
+    StringComparison.OrdinalIgnoreCase));
 
+    if (!hasDefaultModel) {
+        Console.WriteLine();
+        Console.WriteLine($"Warning: default model '{model}' was not found in the local model list.");
+    }
+    if (!models.ContainsModel(model)) {
+        Console.WriteLine();
+        Console.WriteLine($"Warning: default model '{model}' was not found in the local model list.");
+    }
     var reply = await client.ChatAsync(
     model,
     "Say hello in one short sentence.",
@@ -89,6 +107,15 @@ try {
     }
 
     Console.WriteLine();
+
+
+
+    Console.WriteLine();
+    Console.WriteLine("Installed models:");
+
+    foreach (var installedModel in models.Models) {
+        Console.WriteLine($"- {installedModel.Name}");
+    }
 
 
     Console.WriteLine("Press Enter or Ctrl+C to stop.");

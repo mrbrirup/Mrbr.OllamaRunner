@@ -1,6 +1,7 @@
 ﻿using Mrbr.OllamaRunner.Models.Chat;
 using Mrbr.OllamaRunner.Models.Common;
 using Mrbr.OllamaRunner.Models.Generate;
+using Mrbr.OllamaRunner.Models.Models;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
@@ -232,5 +233,17 @@ public sealed class OllamaClient : IOllamaClient {
                 Options = options
             },
             cancellationToken);
+    }
+    public async Task<OllamaModelListResponse> ListModelsAsync(
+    CancellationToken cancellationToken = default) {
+        using var response = await _httpClient.GetAsync(
+            "tags",
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<OllamaModelListResponse>(
+            cancellationToken)
+            ?? throw new InvalidOperationException("Ollama returned an empty model list response.");
     }
 }

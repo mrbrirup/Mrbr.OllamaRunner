@@ -1,6 +1,7 @@
 ﻿using Mrbr.OllamaRunner.Models.Chat;
 using Mrbr.OllamaRunner.Models.Common;
 using Mrbr.OllamaRunner.Models.Generate;
+using Mrbr.OllamaRunner.Models.Models;
 
 namespace Mrbr.OllamaRunner.Client;
 
@@ -55,4 +56,8 @@ public interface IOllamaClient {
         OllamaRuntimeOptions? options = null,
         string? keepAlive = null,
         CancellationToken cancellationToken = default);
+
+    Task<OllamaModelListResponse> ListModelsAsync(
+        CancellationToken cancellationToken = default);
+
 }
