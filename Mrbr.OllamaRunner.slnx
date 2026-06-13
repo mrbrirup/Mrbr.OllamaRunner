@@ -4,6 +4,9 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="Mrbr.OllamaRunner.ConsoleHost/Mrbr.OllamaRunner.ConsoleHost.csproj" />
+  <Project Path="Mrbr.OllamaRunner.Research/Mrbr.OllamaRunner.Research.csproj" Id="7fd0b47c-fee1-40bb-b09a-d6311ec09076" />
+  <Project Path="Mrbr.OllamaRunner.Storage.Abstractions/Mrbr.OllamaRunner.Storage.Abstractions.csproj" Id="ad7b4883-5bb2-49ff-b6c1-facb2af75f10" />
+  <Project Path="Mrbr.OllamaRunner.Storage.FileSystem/Mrbr.OllamaRunner.Storage.FileSystem.csproj" Id="75148b84-7d7a-4de5-b7a6-7c7887877240" />
   <Project Path="Mrbr.OllamaRunner.Tests/Mrbr.OllamaRunner.Tests.csproj" />
   <Project Path="Mrbr.OllamaRunner/Mrbr.OllamaRunner.csproj" />
 </Solution>

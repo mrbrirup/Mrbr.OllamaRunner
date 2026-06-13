@@ -11,6 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Mrbr.OllamaRunner.Research\Mrbr.OllamaRunner.Research.csproj" />
+    <ProjectReference Include="..\Mrbr.OllamaRunner.Storage.FileSystem\Mrbr.OllamaRunner.Storage.FileSystem.csproj" />
     <ProjectReference Include="..\Mrbr.OllamaRunner\Mrbr.OllamaRunner.csproj" />
   </ItemGroup>
 
