@@ -104,5 +104,10 @@ public sealed class OllamaInstanceManagerTests {
         public ValueTask DisposeAsync() {
             return ValueTask.CompletedTask;
         }
+        public string? DefaultEmbeddingModel { get; set; } = "nomic-embed-text";
+
+        public int? DefaultEmbeddingDimensions { get; set; }
+
+        public bool? DefaultEmbeddingTruncate { get; set; } = true;
     }
 }

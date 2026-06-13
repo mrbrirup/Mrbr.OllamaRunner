@@ -62,4 +62,20 @@ public sealed class OllamaInstanceOptions {
     /// Optional default runtime options used by higher-level request helpers.
     /// </summary>
     public OllamaRuntimeOptions? DefaultRuntimeOptions { get; set; }
+    /// <summary>
+    /// Default embedding model used by this instance when no embedding model is supplied explicitly.
+    /// </summary>
+    public string? DefaultEmbeddingModel { get; set; }
+
+    /// <summary>
+    /// Optional default embedding dimensions.
+    /// Some embedding models/endpoints support reducing output dimensions.
+    /// </summary>
+    public int? DefaultEmbeddingDimensions { get; set; }
+
+    /// <summary>
+    /// Whether embedding inputs should be truncated when they exceed the model context window.
+    /// Ollama defaults this to true.
+    /// </summary>
+    public bool? DefaultEmbeddingTruncate { get; set; }
 }

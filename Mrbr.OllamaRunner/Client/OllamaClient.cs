@@ -1,5 +1,6 @@
 ﻿using Mrbr.OllamaRunner.Models.Chat;
 using Mrbr.OllamaRunner.Models.Common;
+using Mrbr.OllamaRunner.Models.Embeddings;
 using Mrbr.OllamaRunner.Models.Generate;
 using Mrbr.OllamaRunner.Models.Models;
 using System.Runtime.CompilerServices;
@@ -245,5 +246,81 @@ public sealed class OllamaClient : IOllamaClient {
         return await response.Content.ReadFromJsonAsync<OllamaModelListResponse>(
             cancellationToken)
             ?? throw new InvalidOperationException("Ollama returned an empty model list response.");
+    }
+    public async Task<OllamaEmbedResponse> EmbedAsync(
+    OllamaEmbedRequest request,
+    CancellationToken cancellationToken = default) {
+        ArgumentNullException.ThrowIfNull(request);
+
+        using var response = await _httpClient.PostAsJsonAsync(
+            "embed",
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<OllamaEmbedResponse>(
+            cancellationToken)
+            ?? throw new InvalidOperationException("Ollama returned an empty embed response.");
+    }
+
+    public async Task<float[]> EmbedAsync(
+        string model,
+        string input,
+        OllamaRuntimeOptions? options = null,
+        string? keepAlive = null,
+        bool? truncate = null,
+        int? dimensions = null,
+        CancellationToken cancellationToken = default) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(input);
+
+        var response = await EmbedAsync(
+            new OllamaEmbedRequest {
+                Model = model,
+                Input = input,
+                Options = options,
+                KeepAlive = keepAlive,
+                Truncate = truncate,
+                Dimensions = dimensions
+            },
+            cancellationToken);
+
+        if (response.Embeddings.Count != 1)
+            throw new InvalidOperationException(
+                $"Expected exactly one embedding, but Ollama returned {response.Embeddings.Count}.");
+
+        return response.Embeddings[0];
+    }
+
+    public async Task<IReadOnlyList<float[]>> EmbedAsync(
+        string model,
+        IReadOnlyList<string> inputs,
+        OllamaRuntimeOptions? options = null,
+        string? keepAlive = null,
+        bool? truncate = null,
+        int? dimensions = null,
+        CancellationToken cancellationToken = default) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(model);
+        ArgumentNullException.ThrowIfNull(inputs);
+
+        if (inputs.Count == 0)
+            throw new ArgumentException("At least one input is required.", nameof(inputs));
+
+        if (inputs.Any(string.IsNullOrWhiteSpace))
+            throw new ArgumentException("Embedding inputs cannot contain null, empty, or whitespace values.", nameof(inputs));
+
+        var response = await EmbedAsync(
+            new OllamaEmbedRequest {
+                Model = model,
+                Input = inputs,
+                Options = options,
+                KeepAlive = keepAlive,
+                Truncate = truncate,
+                Dimensions = dimensions
+            },
+            cancellationToken);
+
+        return response.Embeddings;
     }
 }

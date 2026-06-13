@@ -113,4 +113,9 @@ public sealed class OllamaInstance : IOllamaInstance {
         await StopAsync();
         _httpClient.Dispose();
     }
+    public string? DefaultEmbeddingModel => _options.DefaultEmbeddingModel;
+
+    public int? DefaultEmbeddingDimensions => _options.DefaultEmbeddingDimensions;
+
+    public bool? DefaultEmbeddingTruncate => _options.DefaultEmbeddingTruncate;
 }

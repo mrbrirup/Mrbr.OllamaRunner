@@ -57,6 +57,29 @@ installedModel => string.Equals(
         Console.WriteLine();
         Console.WriteLine($"Warning: default model '{model}' was not found in the local model list.");
     }
+
+    var embeddingModel = instance.DefaultEmbeddingModel
+    ?? throw new InvalidOperationException(
+        $"No default embedding model configured for Ollama instance '{instance.Name}'.");
+
+    Console.WriteLine();
+    Console.WriteLine("Embedding test:");
+
+    var embedding = await client.EmbedAsync(
+        embeddingModel,
+        "Local AI can run privately on my own machine.",
+        instance.DefaultRuntimeOptions,
+        instance.DefaultKeepAlive,
+        instance.DefaultEmbeddingTruncate,
+        instance.DefaultEmbeddingDimensions,
+        cancellationTokenSource.Token);
+
+    Console.WriteLine($"Embedding model: {embeddingModel}");
+    Console.WriteLine($"Embedding dimensions: {embedding.Length}");
+    Console.WriteLine($"First 5 values: {string.Join(", ", embedding.Take(5))}");
+
+
+
     var reply = await client.ChatAsync(
     model,
     "Say hello in one short sentence.",

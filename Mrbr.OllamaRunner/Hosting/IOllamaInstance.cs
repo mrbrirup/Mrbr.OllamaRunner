@@ -44,5 +44,9 @@ public interface IOllamaInstance : IAsyncDisposable {
     string? DefaultKeepAlive { get; }
 
     OllamaRuntimeOptions? DefaultRuntimeOptions { get; }
+    string? DefaultEmbeddingModel { get; }
 
+    int? DefaultEmbeddingDimensions { get; }
+
+    bool? DefaultEmbeddingTruncate { get; }
 }

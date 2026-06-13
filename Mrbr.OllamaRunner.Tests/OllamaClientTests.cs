@@ -1,6 +1,7 @@
 ﻿using Mrbr.OllamaRunner.Client;
 using Mrbr.OllamaRunner.Models.Chat;
 using Mrbr.OllamaRunner.Models.Common;
+using Mrbr.OllamaRunner.Models.Embeddings;
 using Mrbr.OllamaRunner.Models.Generate;
 using System.Net;
 using System.Text;
@@ -550,4 +551,178 @@ public sealed class OllamaClientTests {
         Assert.NotNull(result.Models);
         Assert.Empty(result.Models);
     }
+    [Fact]
+    public async Task EmbedAsync_SendsRequestToEmbedEndpoint() {
+        HttpRequestMessage? capturedRequest = null;
+
+        var handler = new FakeHttpMessageHandler((request, _) => {
+            capturedRequest = request;
+
+            return new HttpResponseMessage(HttpStatusCode.OK) {
+                Content = new StringContent(
+                    """
+                {
+                  "model": "nomic-embed-text",
+                  "embeddings": [
+                    [0.1, 0.2, 0.3]
+                  ],
+                  "total_duration": 123,
+                  "load_duration": 45,
+                  "prompt_eval_count": 6
+                }
+                """,
+                    Encoding.UTF8,
+                    "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) {
+            BaseAddress = new Uri("http://127.0.0.1:11434/api/")
+        };
+
+        var client = new OllamaClient(httpClient);
+
+        var result = await client.EmbedAsync(new OllamaEmbedRequest {
+            Model = "nomic-embed-text",
+            Input = "Hello"
+        });
+
+        Assert.NotNull(capturedRequest);
+        Assert.Equal(HttpMethod.Post, capturedRequest.Method);
+        Assert.Equal(
+            new Uri("http://127.0.0.1:11434/api/embed"),
+            capturedRequest.RequestUri);
+
+        Assert.Single(result.Embeddings);
+        Assert.Equal([0.1f, 0.2f, 0.3f], result.Embeddings[0]);
+        Assert.Equal(6, result.PromptEvalCount);
+    }
+    [Fact]
+    public async Task EmbedAsync_StringOverload_ReturnsSingleEmbedding() {
+        var handler = new FakeHttpMessageHandler((_, _) =>
+            new HttpResponseMessage(HttpStatusCode.OK) {
+                Content = new StringContent(
+                    """
+                {
+                  "model": "nomic-embed-text",
+                  "embeddings": [
+                    [0.1, 0.2, 0.3]
+                  ]
+                }
+                """,
+                    Encoding.UTF8,
+                    "application/json")
+            });
+
+        var httpClient = new HttpClient(handler) {
+            BaseAddress = new Uri("http://127.0.0.1:11434/api/")
+        };
+
+        var client = new OllamaClient(httpClient);
+
+        var embedding = await client.EmbedAsync(
+            "nomic-embed-text",
+            "Hello");
+
+        Assert.Equal([0.1f, 0.2f, 0.3f], embedding);
+    }
+    [Fact]
+    public async Task EmbedAsync_BatchOverload_ReturnsMultipleEmbeddings() {
+        var handler = new FakeHttpMessageHandler((_, _) =>
+            new HttpResponseMessage(HttpStatusCode.OK) {
+                Content = new StringContent(
+                    """
+                {
+                  "model": "nomic-embed-text",
+                  "embeddings": [
+                    [0.1, 0.2, 0.3],
+                    [0.4, 0.5, 0.6]
+                  ]
+                }
+                """,
+                    Encoding.UTF8,
+                    "application/json")
+            });
+
+        var httpClient = new HttpClient(handler) {
+            BaseAddress = new Uri("http://127.0.0.1:11434/api/")
+        };
+
+        var client = new OllamaClient(httpClient);
+
+        var embeddings = await client.EmbedAsync(
+            "nomic-embed-text",
+            ["Hello", "World"]);
+
+        Assert.Equal(2, embeddings.Count);
+        Assert.Equal([0.1f, 0.2f, 0.3f], embeddings[0]);
+        Assert.Equal([0.4f, 0.5f, 0.6f], embeddings[1]);
+    }
+    [Fact]
+    public async Task EmbedAsync_WithOptions_SendsExpectedRequestBody() {
+        string? requestJson = null;
+
+        var handler = new FakeHttpMessageHandler((request, _) => {
+            requestJson = request.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
+
+            return new HttpResponseMessage(HttpStatusCode.OK) {
+                Content = new StringContent(
+                    """
+                {
+                  "model": "nomic-embed-text",
+                  "embeddings": [
+                    [0.1, 0.2, 0.3]
+                  ]
+                }
+                """,
+                    Encoding.UTF8,
+                    "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) {
+            BaseAddress = new Uri("http://127.0.0.1:11434/api/")
+        };
+
+        var client = new OllamaClient(httpClient);
+
+        var embedding = await client.EmbedAsync(
+            "nomic-embed-text",
+            "Hello",
+            new OllamaRuntimeOptions {
+                NumCtx = 2048
+            },
+            keepAlive: "5m",
+            truncate: true,
+            dimensions: 768);
+
+        Assert.Equal([0.1f, 0.2f, 0.3f], embedding);
+        Assert.NotNull(requestJson);
+
+        Assert.Contains("\"model\":\"nomic-embed-text\"", requestJson);
+        Assert.Contains("\"input\":\"Hello\"", requestJson);
+        Assert.Contains("\"keep_alive\":\"5m\"", requestJson);
+        Assert.Contains("\"truncate\":true", requestJson);
+        Assert.Contains("\"dimensions\":768", requestJson);
+        Assert.Contains("\"num_ctx\":2048", requestJson);
+    }
+    [Fact]
+    public async Task EmbedAsync_WhenHttpFails_ThrowsHttpRequestException() {
+        var handler = new FakeHttpMessageHandler((_, _) =>
+            new HttpResponseMessage(HttpStatusCode.InternalServerError));
+
+        var httpClient = new HttpClient(handler) {
+            BaseAddress = new Uri("http://127.0.0.1:11434/api/")
+        };
+
+        var client = new OllamaClient(httpClient);
+
+        await Assert.ThrowsAsync<HttpRequestException>(() =>
+            client.EmbedAsync(new OllamaEmbedRequest {
+                Model = "nomic-embed-text",
+                Input = "Hello"
+            }));
+    }
+
+
 }

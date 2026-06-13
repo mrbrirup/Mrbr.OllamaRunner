@@ -1,5 +1,6 @@
 ﻿using Mrbr.OllamaRunner.Models.Chat;
 using Mrbr.OllamaRunner.Models.Common;
+using Mrbr.OllamaRunner.Models.Embeddings;
 using Mrbr.OllamaRunner.Models.Generate;
 using Mrbr.OllamaRunner.Models.Models;
 
@@ -59,5 +60,25 @@ public interface IOllamaClient {
 
     Task<OllamaModelListResponse> ListModelsAsync(
         CancellationToken cancellationToken = default);
+    Task<OllamaEmbedResponse> EmbedAsync(
+    OllamaEmbedRequest request,
+    CancellationToken cancellationToken = default);
 
+    Task<float[]> EmbedAsync(
+        string model,
+        string input,
+        OllamaRuntimeOptions? options = null,
+        string? keepAlive = null,
+        bool? truncate = null,
+        int? dimensions = null,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<float[]>> EmbedAsync(
+        string model,
+        IReadOnlyList<string> inputs,
+        OllamaRuntimeOptions? options = null,
+        string? keepAlive = null,
+        bool? truncate = null,
+        int? dimensions = null,
+        CancellationToken cancellationToken = default);
 }

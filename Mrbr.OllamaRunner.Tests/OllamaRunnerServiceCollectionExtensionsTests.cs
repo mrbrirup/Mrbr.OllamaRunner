@@ -244,4 +244,32 @@ public sealed class OllamaRunnerServiceCollectionExtensionsTests {
         Assert.Contains("\"temperature\":0.2", requestJson);
         Assert.Contains("\"num_ctx\":2048", requestJson);
     }
+    [Fact]
+    public async Task AddOllamaRunner_ExposesDefaultEmbeddingSettingsThroughInstance() {
+        var configuration = TestConfigurationFactory.Create(new Dictionary<string, string?> {
+            ["OllamaRunner:Instances:default:Name"] = "default",
+            ["OllamaRunner:Instances:default:Mode"] = "External",
+            ["OllamaRunner:Instances:default:BindHost"] = "127.0.0.1",
+            ["OllamaRunner:Instances:default:Port"] = "11434",
+            ["OllamaRunner:Instances:default:DefaultModel"] = "llama3.2:1b",
+            ["OllamaRunner:Instances:default:DefaultEmbeddingModel"] = "nomic-embed-text",
+            ["OllamaRunner:Instances:default:DefaultEmbeddingTruncate"] = "true",
+            ["OllamaRunner:Instances:default:DefaultEmbeddingDimensions"] = "768",
+            ["OllamaRunner:Instances:default:StartupTimeoutSeconds"] = "30"
+        });
+
+        var services = new ServiceCollection();
+
+        services.AddLogging();
+        services.AddOllamaRunner(configuration);
+
+        await using var provider = services.BuildServiceProvider();
+
+        var manager = provider.GetRequiredService<IOllamaInstanceManager>();
+        var instance = manager.GetInstance("default");
+
+        Assert.Equal("nomic-embed-text", instance.DefaultEmbeddingModel);
+        Assert.True(instance.DefaultEmbeddingTruncate);
+        Assert.Equal(768, instance.DefaultEmbeddingDimensions);
+    }
 }
