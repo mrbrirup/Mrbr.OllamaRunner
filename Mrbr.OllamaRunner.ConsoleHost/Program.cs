@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Mrbr.OllamaRunner.Client;
 using Mrbr.OllamaRunner.DependencyInjection;
 using Mrbr.OllamaRunner.Hosting;
+using Mrbr.OllamaRunner.Storage.Abstractions.Stores;
+using Mrbr.OllamaRunner.Storage.FileSystem.DependencyInjection;
 
 using var cancellationTokenSource = new CancellationTokenSource();
 
@@ -22,12 +24,11 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
 builder.Services.AddOllamaRunner(builder.Configuration);
-
+builder.Services.AddFileSystemResearchStorage(builder.Configuration);
 using var host = builder.Build();
 
 var manager = host.Services.GetRequiredService<IOllamaInstanceManager>();
 var clientFactory = host.Services.GetRequiredService<IOllamaClientFactory>();
-
 try {
     var instance = manager.GetInstance("default");
 
@@ -77,6 +78,29 @@ installedModel => string.Equals(
     Console.WriteLine($"Embedding model: {embeddingModel}");
     Console.WriteLine($"Embedding dimensions: {embedding.Length}");
     Console.WriteLine($"First 5 values: {string.Join(", ", embedding.Take(5))}");
+
+    var projectStore = host.Services.GetRequiredService<IResearchProjectStore>();
+
+    Console.WriteLine();
+    Console.WriteLine("Research storage test:");
+
+    var project = await projectStore.CreateAsync(
+        "Ollama Runner Test Project",
+        "Created by the console host smoke test.",
+        cancellationTokenSource.Token);
+
+    Console.WriteLine($"Created project: {project.Name}");
+    Console.WriteLine($"Project id: {project.Id}");
+
+    var loadedProject = await projectStore.GetAsync(
+        project.Id,
+        cancellationTokenSource.Token);
+
+    Console.WriteLine($"Loaded project: {loadedProject?.Name}");
+
+    var projects = await projectStore.ListAsync(cancellationTokenSource.Token);
+
+    Console.WriteLine($"Project count: {projects.Count}");
 
 
 

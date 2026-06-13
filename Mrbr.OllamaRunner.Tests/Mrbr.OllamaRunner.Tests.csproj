@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Mrbr.OllamaRunner.Storage.Abstractions\Mrbr.OllamaRunner.Storage.Abstractions.csproj" />
+    <ProjectReference Include="..\Mrbr.OllamaRunner.Storage.FileSystem\Mrbr.OllamaRunner.Storage.FileSystem.csproj" />
     <ProjectReference Include="..\Mrbr.OllamaRunner\Mrbr.OllamaRunner.csproj" />
   </ItemGroup>
 
